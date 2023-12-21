@@ -1,9 +1,11 @@
 import requests
 import json
 
+import secret
+
 from datetime import datetime
 
-from secret import password, domain
+from config import domain
 
 
 def get_booking_timestamps(booking_times):
@@ -52,18 +54,16 @@ def find_activity_id(session, booking_date, booking_open):
         'Accept': 'application/json',
     }
     response = session.get(adr, headers=headers)
-    print('FETCH STATUS: ', response.status_code)
+    if response.status_code != 200:
+        raise Exception('find_activity_id failed with status code: ', response.status_code)
     resp_string = response.text
     resp_dict = json.loads(resp_string)
     activities = resp_dict['activities']
-    # print(json.dumps(resp_dict, indent=4, sort_keys=True))
     for activity in activities:
         for key, value in activity.items():
             if key == "Activity":
-                # print(key, value, '\n')
                 id = value['id']
                 start_time = value['start']
-                # print('CANDIDATE: ', id, start_time, '\n')
                 activity_date, activity_time = start_time.split()
                 if booking_date == activity_date and booking_open == activity_time:
                     print('BOOKING ID FOUND: ', id, '\n')
@@ -90,17 +90,16 @@ def book_activity(id_booking, session, timestamps):
 
 def main():
     # setup
-    username = 'sebastian.angermund@seb.se'
+    username = secret.login['username']
+    password = secret.login['password']
     booking_times = ['18:00:00']
     timestamps = get_booking_timestamps(booking_times)
-    print(timestamps[0].timestamp())
     booking_date = timestamps[0].strftime('%Y-%m-%d')
     booking_open = '13:00:00'
 
     # run session
     session = get_session(username, password)
     id_activity = find_activity_id(session, booking_date, booking_open)
-    print('ACTIVITY ID: ', id_activity, '\n')
     book_activity(id_activity, session, timestamps)
 
 
