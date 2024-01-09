@@ -46,29 +46,30 @@ def find_activity_id(session, booking_date, booking_opens):
     for activity in activities:
         for key, value in activity.items():
             if key == "Activity":
-                id = value['id']
+                id_ = value['id']
                 start_time = value['start']
                 activity_date, activity_time = start_time.split()
                 if booking_date == activity_date and booking_opens == activity_time:
-                    print('BOOKING ID FOUND: ', id, '\n')
-                    id_activity = id
+                    print('BOOKING ID FOUND: ', id_, '\n')
+                    id_activity = id_
+                else:
+                    raise Exception('No activity_id found for given date and time')
+            else:
+                raise Exception('No activity found for given date and type')
     return id_activity
 
 
-def book_activity(id_booking, session, timestamps):
+def book_activity(id_activity, session, timestamps):
     headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         'Referer': f'https://{domain}/schema'
     }
-    address_pre_booking = f'https://{domain}/w_booking/activities/participate/{id_booking}?pre=1'
-    address_booking = f'https://{domain}/w_booking/activities/participate/{id_booking}/?force=1'
+    address_booking = f'https://{domain}/w_booking/activities/participate/{id_activity}/?force=1'
     for timestamp in timestamps:
         if not timestamp:
             continue
         payload = {"ActivityBooking": {"book_start": str(int(timestamp.timestamp())), "book_length": "30", "participants": 1}}
-        response_pre_booking = session.post(address_pre_booking, json=payload, headers=headers)
-        print(f'PRE BOOKING STATUS {timestamp}: ', response_pre_booking.status_code)
         response_booking = session.post(address_booking, json=payload, headers=headers)
         print(f'BOOKING STATUS {timestamp}: ', response_booking.status_code)
         print(response_booking.headers)
@@ -91,8 +92,8 @@ if __name__ == '__main__':
     password = secret.login['password']
     # setup booking date and times
     today = datetime.utcnow()
-    days_until_booking = 3
-    booking_opens = '13:00:00'
+    days_until_booking = 6
     booking_day = today.replace(day=today.day+days_until_booking, hour=0, minute=0, second=0, microsecond=0)
-    booking_times = ['13:00:00', '13:30:00']
+    booking_opens = '13:00:00'
+    booking_times = ['14:30:00', '15:00:00']
     main(booking_times, booking_day, booking_opens, username, password)

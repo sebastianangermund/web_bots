@@ -1,4 +1,14 @@
-from book_activity import get_uuids
+
+def get_uuids(html):
+    find_text = 'Boka sporthallen 30min'
+    uuids = []
+    while True:
+        index = html.find(find_text)
+        if index == -1:
+            break
+        uuids.append(html[index-39:index-3])
+        html = html[index+len(find_text):]
+    return uuids
 
 
 def test_get_uuids():
